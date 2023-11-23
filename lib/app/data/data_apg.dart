@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class APG extends GetxController {
-  var agendaItems = <AgendaItem>[].obs;
+  var agendaItems = <APGData>[].obs;
+  RxBool isFetchingData = false.obs;
 
   @override
   void onInit() {
@@ -15,22 +17,38 @@ class APG extends GetxController {
     try {
       final response = await http
           .get(Uri.parse('https://haruka2022.com/api_controller/get_apg_data'));
+      isFetchingData.value = true;
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body)['data'];
 
-        agendaItems.assignAll(data.map((item) => AgendaItem.fromJson(item)));
         // print(agendaItems[0].alokasi);
+        if (agendaItems.isEmpty) {
+          agendaItems.assignAll(data.map((item) => APGData.fromJson(item)));
+          isFetchingData.value = false;
+        } else {
+          // Data sebelumnya sudah ada, bandingkan dengan data yang baru
+          final List<APGData> newAgendaItems =
+              data.map((json) => APGData.fromJson(json)).toList();
+
+          if (!listEquals(agendaItems, newAgendaItems)) {
+            // Ada pembaruan data
+            agendaItems.value = newAgendaItems;
+            isFetchingData.value = false;
+          }
+        }
       } else {
+        isFetchingData.value = false;
         throw Exception('Gagal mengambil data dari API');
       }
     } catch (error) {
       print('Error: $error');
+      isFetchingData.value = false;
     }
   }
 }
 
-class AgendaItem {
+class APGData {
   final String? id;
   final String? apg;
   final String? cpm;
@@ -44,10 +62,9 @@ class AgendaItem {
   final String? picKominfo;
   final String? cpmPicStakeholder;
   final String? cpmPicKominfo;
-  final String? createdAt;
-  final String? updatedAt;
+  final List<Map<String, dynamic>>? apgInDok;
 
-  AgendaItem({
+  APGData({
     required this.id,
     required this.apg,
     required this.cpm,
@@ -61,12 +78,11 @@ class AgendaItem {
     required this.picKominfo,
     required this.cpmPicStakeholder,
     required this.cpmPicKominfo,
-    required this.createdAt,
-    required this.updatedAt,
+    required this.apgInDok,
   });
 
-  factory AgendaItem.fromJson(Map<String, dynamic> json) {
-    return AgendaItem(
+  factory APGData.fromJson(Map<String, dynamic> json) {
+    return APGData(
       id: json['id_agenda_items_new'],
       apg: json['apg'],
       cpm: json['cpm'],
@@ -80,8 +96,47 @@ class AgendaItem {
       picKominfo: json['pic_kominfo'],
       cpmPicStakeholder: json['cpm_pic_stakeholder'],
       cpmPicKominfo: json['cpm_pic_kominfo'],
-      createdAt: json['created_at'],
-      updatedAt: json['updated_at'],
+      apgInDok: (json['apg_ai_in_dok'] as List<dynamic>?)
+              ?.map((item) => (item as Map<String, dynamic>))
+              .toList() ??
+          [],
     );
   }
+}
+
+class APGAiInDokData {
+  final String? id;
+  final String? agendaItemsNewId;
+  final String? title;
+  final String? link;
+  final String? source;
+  final String? tanggal;
+  final String? resume;
+
+  APGAiInDokData({
+    this.id,
+    this.agendaItemsNewId,
+    this.title,
+    this.link,
+    this.source,
+    this.tanggal,
+    this.resume,
+  });
+
+  factory APGAiInDokData.fromJson(Map<String, dynamic> json) {
+    return APGAiInDokData(
+      id: json['id_apg_ai_new_in_dok'],
+      agendaItemsNewId: json['id_agenda_items_new'],
+      title: json['apg_ai_new_in_dok_title'],
+      link: json['apg_ai_new_in_dok_link'],
+      source: json['apg_ai_new_in_dok_source'],
+      tanggal: json['apg_ai_new_in_dok_tanggal'],
+      resume: json['apg_ai_new_in_dok_resume'],
+    );
+  }
+}
+
+List<APGAiInDokData> convertToAPGAiInDokDataList(
+    List<Map<String, dynamic>> data) {
+  return data.map((item) => APGAiInDokData.fromJson(item)).toList();
 }
