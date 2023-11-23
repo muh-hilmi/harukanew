@@ -29,52 +29,51 @@ class ApgDetailView extends GetView {
             dataPerItem('Posisi Indonesia', uid.posisiIndonesia),
             dataPerItem(
                 'Organisasi Internasional', uid.organisasiInternasional),
-            Padding(
-              padding: const EdgeInsets.all(8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Input Dokumen',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 10),
-                  // Di dalam kelas ApgDetailView
-                  SfDataGrid(
-                    gridLinesVisibility: GridLinesVisibility.both,
-                    headerGridLinesVisibility: GridLinesVisibility.both,
-                    source: DokumenDataSource(
-                        dokumenData: convertToAPGAiInDokDataList(uid.apgInDok)),
-                    columnWidthMode: ColumnWidthMode.auto,
-                    shrinkWrapRows: true,
-                    columns: <GridColumn>[
-                      GridColumn(
-                        columnName: 'title',
-                        label: Container(
-                          alignment: Alignment.center,
-                          child: const Text('Title'),
-                        ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Input Dokumen',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 10),
+                // Di dalam kelas ApgDetailView
+                SfDataGrid(
+                  gridLinesVisibility: GridLinesVisibility.both,
+                  headerGridLinesVisibility: GridLinesVisibility.both,
+                  source: DokumenDataSource(
+                      dokumenData: convertToAPGAiInDokDataList(uid.apgInDok)),
+                  shrinkWrapRows: true,
+                  columns: <GridColumn>[
+                    GridColumn(
+                      columnWidthMode: ColumnWidthMode.fitByColumnName,
+                      columnName: 'title',
+                      label: Container(
+                        alignment: Alignment.center,
+                        child: const Text('Title'),
                       ),
-                      GridColumn(
-                        columnName: 'source',
-                        label: Container(
-                          alignment: Alignment.center,
-                          child: const Text('Source'),
-                        ),
+                    ),
+                    GridColumn(
+                      columnWidthMode: ColumnWidthMode.fitByColumnName,
+                      columnName: 'source',
+                      label: Container(
+                        alignment: Alignment.center,
+                        child: const Text('Negara'),
                       ),
-                      // GridColumn(
-                      //   columnName: 'tanggal',
-                      //   label: Container(
-                      //     padding: const EdgeInsets.all(8.0),
-                      //     alignment: Alignment.centerLeft,
-                      //     child: const Text('Tanggal'),
-                      //   ),
-                      // ),
-                    ],
-                  ),
-                ],
-              ),
-            )
+                    ),
+                    GridColumn(
+                      columnWidthMode: ColumnWidthMode.fill,
+                      columnName: 'resume',
+                      label: Container(
+                        padding: const EdgeInsets.all(8.0),
+                        alignment: Alignment.centerLeft,
+                        child: const Text('Tanggal'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -84,19 +83,18 @@ class ApgDetailView extends GetView {
 
 Widget dataPerItem(String title, String content) {
   return Container(
-    padding: const EdgeInsets.all(8),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           title,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
-        const SizedBox(height: 10),
         Text(
           content.isEmpty ? '-' : content,
-          style: const TextStyle(fontSize: 16),
+          style: const TextStyle(fontSize: 14),
         ),
+        const SizedBox(height: 10),
       ],
     ),
   );
@@ -109,7 +107,7 @@ class DokumenDataSource extends DataGridSource {
               DataGridCell<String>(columnName: 'title', value: e.title),
               DataGridCell<String>(columnName: 'link', value: e.link),
               DataGridCell<String>(columnName: 'source', value: e.source),
-              DataGridCell<String>(columnName: 'tanggal', value: e.tanggal),
+              DataGridCell<String>(columnName: 'resume', value: e.resume),
             ]))
         .toList();
   }
@@ -122,7 +120,7 @@ class DokumenDataSource extends DataGridSource {
         title: _dokumenData[rowIndex].getCells()[0].value.toString(),
         link: _dokumenData[rowIndex].getCells()[1].value.toString(),
         source: _dokumenData[rowIndex].getCells()[2].value.toString(),
-        tanggal: _dokumenData[rowIndex].getCells()[3].value.toString(),
+        resume: _dokumenData[rowIndex].getCells()[3].value.toString(),
       );
     } else {
       return APGAiInDokData(); // Atau throw Exception sesuai kebutuhan
@@ -155,11 +153,15 @@ class DokumenDataSource extends DataGridSource {
         padding: const EdgeInsets.all(8.0),
         child: Text(row.getCells()[2].value.toString()),
       ),
-      // Container(
-      //   alignment: Alignment.centerLeft,
-      //   padding: const EdgeInsets.all(8.0),
-      //   child: Text(row.getCells()[3].value.toString()),
-      // ),
+      Container(
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.all(8.0),
+        child: Text(
+          row.getCells()[3].value.toString(),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
     ]);
   }
 }

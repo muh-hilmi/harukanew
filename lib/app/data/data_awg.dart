@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class AWG extends GetxController {
   var agendaItems = <AWGData>[].obs;
+  RxBool isFetchingData = false.obs;
 
   @override
   void onInit() {
@@ -15,12 +17,27 @@ class AWG extends GetxController {
     try {
       final response = await http
           .get(Uri.parse('https://haruka2022.com/api_controller/get_awg_data'));
+      isFetchingData.value = true;
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body)['data'];
 
         agendaItems.assignAll(data.map((item) => AWGData.fromJson(item)));
-        print(agendaItems[1].topik);
+        // print(agendaItems[1].topik);
+        if (agendaItems.isEmpty) {
+          agendaItems.assignAll(data.map((item) => AWGData.fromJson(item)));
+          isFetchingData.value = false;
+        } else {
+          // Data sebelumnya sudah ada, bandingkan dengan data yang baru
+          final List<AWGData> newAgendaItems =
+              data.map((json) => AWGData.fromJson(json)).toList();
+
+          if (!listEquals(agendaItems, newAgendaItems)) {
+            // Ada pembaruan data
+            agendaItems.value = newAgendaItems;
+            isFetchingData.value = false;
+          }
+        }
       } else {
         throw Exception('Gagal mengambil data dari API');
       }
@@ -90,11 +107,56 @@ class AWGData {
       catatan: json['catatan'],
       createdAt: json['created_at'],
       updatedAt: json['updated_at'],
-      awgInDok: List<Map<String, dynamic>>.from(json['awg_in_dok'] ?? []),
-      awgHasilDok: List<Map<String, dynamic>>.from(json['awg_hasil_dok'] ?? []),
-      awgRelDok: List<Map<String, dynamic>>.from(json['awg_rel_dok'] ?? []),
-      awgMainHasilPertemuan: List<Map<String, dynamic>>.from(
-          json['awg_main_hasil_pertemuan'] ?? []),
+      awgInDok: (json['awg_in_dok'] as List<dynamic>?)
+              ?.map((item) => (item as Map<String, dynamic>))
+              .toList() ??
+          [],
+      awgHasilDok: (json['awg_hasil_dok'] as List<dynamic>?)
+              ?.map((item) => (item as Map<String, dynamic>))
+              .toList() ??
+          [],
+      awgRelDok: (json['awg_rel_dok'] as List<dynamic>?)
+              ?.map((item) => (item as Map<String, dynamic>))
+              .toList() ??
+          [],
+      awgMainHasilPertemuan:
+          (json['awg_main_hasil_pertemuan'] as List<dynamic>?)
+                  ?.map((item) => (item as Map<String, dynamic>))
+                  .toList() ??
+              [],
     );
   }
+}
+
+class AWGInDokData {
+  final String? idInput;
+  final String? idMain;
+  final String? input;
+  final String? link;
+  final String? source;
+  final String? resume;
+
+  AWGInDokData({
+    this.idInput,
+    this.idMain,
+    this.input,
+    this.link,
+    this.source,
+    this.resume,
+  });
+
+  factory AWGInDokData.fromJson(Map<String, dynamic> json) {
+    return AWGInDokData(
+      idInput: json['id_input'],
+      idMain: json['id_main'],
+      input: json['dok_input'],
+      link: json['link_dok'],
+      source: json['sumber_dok'],
+      resume: json['resume_posisi'],
+    );
+  }
+}
+
+List<AWGInDokData> convertToAWGInDokDataList(List<Map<String, dynamic>> data) {
+  return data.map((item) => AWGInDokData.fromJson(item)).toList();
 }

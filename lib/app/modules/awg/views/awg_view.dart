@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:harukanew/app/controllers/page_index_controller.dart';
 import 'package:harukanew/app/data/data_awg.dart';
 import 'package:harukanew/app/modules/awg/controllers/awg_controller.dart';
+import 'package:harukanew/app/routes/app_pages.dart';
 
 class AwgView extends GetView<AwgController> {
   AwgView({Key? key}) : super(key: key);
@@ -126,6 +127,10 @@ class AwgView extends GetView<AwgController> {
                             Text('WG: ${item.wg}'),
                             Text('Topik: $limitedText'),
                           ],
+                        ),
+                        onTap: () => Get.toNamed(
+                          Routes.AWG_DETAIL,
+                          arguments: item,
                         ),
                       );
                     },
